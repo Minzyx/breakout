@@ -1,4 +1,4 @@
-import { Actor, CollisionType, Color, Engine, Font, Text, vec } from "excalibur"
+import { Actor, CollisionType, Color, Engine, Font, FontUnit, Label, Loader, Sound, Text, vec } from "excalibur"
 
 // 1 - Criar uma instancia de Engine, que representa o jogo
 const game = new Engine({
@@ -79,6 +79,8 @@ const yoffset = 20
 const colunas = 5
 const linhas = 3
 
+const blocos = colunas * linhas
+
 const corBloco = [Color.Red, Color.Orange, Color.Yellow]
 
 const larguraBloco = (game.drawWidth / colunas) - padding - (padding / colunas)
@@ -120,48 +122,82 @@ listaBlocos.forEach( bloco => {
 // Adicionando pontuação
 let pontos = 0
 
-const textoPontos = new Text({
-	text: "Hello World",
-	font: new Font({size:20})
+
+const textoPontos = new Label({
+	text: pontos.toString(),
+	font: new Font({
+		size: 40,
+		color: Color.White,
+		strokeColor: Color.Black,
+		unit: FontUnit.Px
+	}),
+	pos: vec(600,500)
 })
+
+game.add(textoPontos)
+
+// const textoPontos = new Text({
+// 	text: "Hello World",
+// 	font: new Font({size:20})
+// })
 
 const objetoTexto = new Actor ({
 	x: game.drawWidth - 80,
 	y: game.drawHeight - 15
 })
 
-objetoTexto.graphics.use(textoPontos)
+// objetoTexto.graphics.use(textoPontos)
 
 game.add(objetoTexto)
 
 let colidindo: boolean = false
 
+const sound = new Sound("./sound/sonzinho.mp3");
+const loader = new Loader([sound]);
+
+
 bolinha.on("collisionstart",(event) => {
-	// Verificar se a bolinha colidiu com algum bloco destrutivel
-	console.log()
 
-	// Se o elemento colidido for um bloco da lista de blocos (destrutivel)
-	if (listaBlocos.includes(event.other)) {
-		// Destruir o bloco colidido
-		event.other.kill()
-	}
-
-	// Rebater a bolinha - Inverter as direções
-	// "minimum translation vector" is a vector `normalize()`
-	let interseccao = event.contact.mtv.normalize()
-
-	// Se não está colidindo
-	if (!colidindo) {
-		colidindo = true
-		// interseccao.x e interseccao.y
-		// O maior representa o eixo onde houve o contato
-		if ( Math.abs(interseccao.x)> Math.abs(interseccao.y)) {
-			bolinha.vel.x = bolinha.vel.x * -1
-		}else{
-			bolinha.vel.y = bolinha.vel.y * -1
+	if (pontos < blocos) {
+		
+		// Verificar se a bolinha colidiu com algum bloco destrutivel
+		console.log()
+		
+		// Se o elemento colidido for um bloco da lista de blocos (destrutivel)
+		
+		if (listaBlocos.includes(event.other)) {
+			// Destruir o bloco colidido
+			event.other.kill()
+			
+			pontos++
+			
+			textoPontos.text = pontos.toString()
+			sound.play(0.5)
+			
+			
+		} 
+		// Rebater a bolinha - Inverter as direções
+		// "minimum translation vector" is a vector `normalize()`
+		let interseccao = event.contact.mtv.normalize()
+		
+		// Se não está colidindo
+		if (!colidindo) {
+			colidindo = true
+			// interseccao.x e interseccao.y
+			// O maior representa o eixo onde houve o contato
+			if ( Math.abs(interseccao.x)> Math.abs(interseccao.y)) {
+				bolinha.vel.x = bolinha.vel.x * -1
+			}else{
+				bolinha.vel.y = bolinha.vel.y * -1
+			}
 		}
+	} else{
+		alert("Ganhooooou!!")
+		window.location.reload()
 	}
-} )
+	} )
+
+	
 
 bolinha.on("collisionend", () => {
 	colidindo=false
@@ -172,4 +208,4 @@ bolinha.on("exitviewport", () => {
 	window.location.reload()
 })
 // Inicia o game
-game.start()
+game.start(loader)
